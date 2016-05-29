@@ -12,6 +12,7 @@
 
 namespace Humbug\SelfUpdate\Strategy;
 
+use Humbug\SelfUpdate\FileDownloader;
 use Humbug\SelfUpdate\Updater;
 use Humbug\SelfUpdate\Exception\HttpRequestException;
 use Humbug\SelfUpdate\Exception\InvalidArgumentException;
@@ -37,10 +38,8 @@ class ShaStrategy implements StrategyInterface
      */
     public function download(Updater $updater)
     {
-        /** Switch remote request errors to HttpRequestExceptions */
-        set_error_handler(array($updater, 'throwHttpRequestException'));
-        $result = humbug_get_contents($this->getPharUrl());
-        restore_error_handler();
+        $fileDownloader = new FileDownloader();
+        $result = $fileDownloader->download($this->getPharUrl());
         if (false === $result) {
             throw new HttpRequestException(sprintf(
                 'Request to URL failed: %s', $this->getPharUrl()
@@ -58,10 +57,8 @@ class ShaStrategy implements StrategyInterface
      */
     public function getCurrentRemoteVersion(Updater $updater)
     {
-        /** Switch remote request errors to HttpRequestExceptions */
-        set_error_handler(array($updater, 'throwHttpRequestException'));
-        $version = humbug_get_contents($this->getVersionUrl());
-        restore_error_handler();
+        $fileDownloader = new FileDownloader();
+        $version = $fileDownloader->download($this->getVersionUrl());
         if (false === $version) {
             throw new HttpRequestException(sprintf(
                 'Request to URL failed: %s', $this->getVersionUrl()

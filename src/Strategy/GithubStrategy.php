@@ -12,6 +12,7 @@
 
 namespace Humbug\SelfUpdate\Strategy;
 
+use Humbug\SelfUpdate\FileDownloader;
 use Humbug\SelfUpdate\Updater;
 use Humbug\SelfUpdate\VersionParser;
 use Humbug\SelfUpdate\Exception\HttpRequestException;
@@ -67,10 +68,8 @@ class GithubStrategy implements StrategyInterface
      */
     public function download(Updater $updater)
     {
-        /** Switch remote request errors to HttpRequestExceptions */
-        set_error_handler(array($updater, 'throwHttpRequestException'));
-        $result = humbug_get_contents($this->remoteUrl);
-        restore_error_handler();
+        $fileDownloader = new FileDownloader();
+        $result = $fileDownloader->download($this->remoteUrl);
         if (false === $result) {
             throw new HttpRequestException(sprintf(
                 'Request to URL failed: %s', $this->remoteUrl
@@ -88,11 +87,9 @@ class GithubStrategy implements StrategyInterface
      */
     public function getCurrentRemoteVersion(Updater $updater)
     {
-        /** Switch remote request errors to HttpRequestExceptions */
-        set_error_handler(array($updater, 'throwHttpRequestException'));
+        $fileDownloader = new FileDownloader();
         $packageUrl = $this->getApiUrl();
-        $package = json_decode(humbug_get_contents($packageUrl), true);
-        restore_error_handler();
+        $package = json_decode($fileDownloader->download($packageUrl), true);
 
         if (null === $package || json_last_error() !== JSON_ERROR_NONE) {
             throw new JsonParsingException(
